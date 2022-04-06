@@ -7,3 +7,5 @@ For a list of variables, see [variables.tf](./module/variables.tf)
 For a full description of all available inputs for the upstream AWS module, see the [official documentation](https://github.com/terraform-aws-modules/terraform-aws-vpc).
 
 This blueprint exposes a basic set of inputs to this module, but it can be easily extended as needed.
+
+The blueprint outputs the VPC ID, and the subnet IDs of the created public and private subnets.
