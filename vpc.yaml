@@ -92,3 +92,9 @@ node_templates:
 capabilities:
   vpc_id:
     value: { get_attributes_list: [ vpc, outputs, vpc_id, value ] }
+
+  public_subnets:
+    value: { get_attributes_list: [ vpc, outputs, public_subnets, value ] }
+
+  private_subnets:
+    value: { get_attributes_list: [ vpc, outputs, private_subnets, value ] }
