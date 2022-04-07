@@ -1,13 +1,15 @@
 rest_calls:
-  - path: /api/v2/inventories/
+  - path: /api/v2/projects/
     method: POST
     headers:
       Content-type: application/json
       Authorization: Basic {{AUTHENTICATION}}
     payload:
-      name: Cloudify_inventory
-      description: 'Resources created by Cloudify'
+      name: Cloudify_project
+      description: 'Project for Cloudify POC'
       organization: {{ORGANIZATION_ID}}
+      scm_type: git
+      scm_url: {{SCM_URL}}
     response_format: json
     recoverable_codes: [200]
-    response_translation: [inventory]
+    response_translation: [project]

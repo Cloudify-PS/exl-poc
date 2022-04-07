@@ -28,13 +28,26 @@ inputs:
     type: string
     default: { get_secret: ANSIBLE_TOWER_PASSWORD }
 
-  organization_id:
+  ansible_tower_organization_id:
     type: string
     default: '1'
+
+  ansible_tower_scm_url:
+    type: string
+    default: 'https://github.com/jakubcierlik/exl-example-playbook.git'
+    description: |
+      Github repository containing Ansible Playbooks.
+
+  ansible_tower_playbook_name:
+    type: string
+    default: 'playbook.yaml'
+    description: |
+      Name of the Ansible Playbook from SCM URL that should be executed.
 
   ec2_instance_deployment_name:
     type: string
     default: exl-poc-ec2
+
 
 node_templates:
 
@@ -64,7 +77,14 @@ node_templates:
             save_to: inventory
             params:
               AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
-              ORGANIZATION_ID: { get_input: organization_id }
+              ORGANIZATION_ID: { get_input: ansible_tower_organization_id }
+        stop:
+          inputs:
+            template_file: ansible_tower/rest_templates/delete_inventory.yaml
+            prerender: true
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              INVENTORY_ID: { get_attribute: [SELF, result_properties, inventory, id] }
     relationships:
       - type: cloudify.relationships.depends_on
         target: ansible_tower_credentials
@@ -90,3 +110,112 @@ node_templates:
     relationships:
       - type: cloudify.relationships.depends_on
         target: ansible_tower_inventory
+
+  ansible_tower_project:
+    type: cloudify.rest.Requests
+    properties:
+      hosts: [{ get_input: ansible_tower_endpoint }]
+      ssl: true
+      verify: false
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            template_file: ansible_tower/rest_templates/create_project.yaml
+            prerender: true
+            save_to: project
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              ORGANIZATION_ID: { get_input: ansible_tower_organization_id }
+              SCM_URL: { get_input: ansible_tower_scm_url }
+        stop:
+          inputs:
+            template_file: ansible_tower/rest_templates/delete_project.yaml
+            prerender: true
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              PROJECT_ID: { get_attribute: [SELF, result_properties, project, id] }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_host
+
+  ansible_tower_job_template:
+    type: cloudify.rest.Requests
+    properties:
+      hosts: [{ get_input: ansible_tower_endpoint }]
+      ssl: true
+      verify: false
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            template_file: ansible_tower/rest_templates/create_job_template.yaml
+            prerender: true
+            save_to: job_template
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              INVENTORY_ID: { get_attribute: [ansible_tower_inventory, result_properties, inventory, id] }
+              PROJECT_ID: { get_attribute: [ansible_tower_project, result_properties, project, id] }
+              PLAYBOOK_NAME: { get_input: ansible_tower_playbook_name }
+        stop:
+          inputs:
+            template_file: ansible_tower/rest_templates/delete_job_template.yaml
+            prerender: true
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              JOB_TEMPLATE_ID: { get_attribute: [SELF, result_properties, job_template, id] }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_project
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_inventory
+
+  ansible_tower_credential:
+    type: cloudify.rest.Requests
+    properties:
+      hosts: [{ get_input: ansible_tower_endpoint }]
+      ssl: true
+      verify: false
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            template_file: ansible_tower/rest_templates/create_credential.yaml
+            prerender: true
+            save_to: credential
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              JOB_TEMPLATE_ID: { get_attribute: [ansible_tower_job_template, result_properties, job_template, id] }
+              SSH_KEY_DATA: { get_secret: SSH_KEY_DATA }
+        stop:
+          inputs:
+            template_file: ansible_tower/rest_templates/delete_credential.yaml
+            prerender: true
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              CREDENTIAL_ID: { get_attribute: [SELF, result_properties, credential, id] }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_job_template
+
+  ansible_tower_launch_job:
+    type: cloudify.rest.Requests
+    properties:
+      hosts: [{ get_input: ansible_tower_endpoint }]
+      ssl: true
+      verify: false
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            template_file: ansible_tower/rest_templates/launch_job.yaml
+            prerender: true
+            save_to: launch_job
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              JOB_TEMPLATE_ID: { get_attribute: [ansible_tower_job_template, result_properties, job_template, id] }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_job_template
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_credential

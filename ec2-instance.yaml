@@ -60,7 +60,20 @@ node_templates:
     properties:
       resource_config:
         installation_source: https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip
-    
+
+  # ec2_key:
+  #   type: cloudify.nodes.aws.ec2.Keypair
+  #   properties:
+  #     client_config:
+  #       aws_access_key_id: { get_input: aws_access_key_id }
+  #       aws_secret_access_key: { get_input: aws_secret_access_key }
+  #       region_name: { get_input: region }
+  #     log_create_response: false
+  #     store_in_runtime_properties: false
+  #     create_secret: true
+  #     secret_name: SSH_KEY_EC2
+  #     update_existing_secret: true
+
   instance:
     type: cloudify.nodes.terraform.Module
     properties:

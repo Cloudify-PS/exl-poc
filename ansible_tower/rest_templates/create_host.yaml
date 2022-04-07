@@ -1,14 +1,12 @@
 rest_calls:
-  - path: /api/v2/inventories/{{INVENTORY_ID}}/hosts
+  - path: /api/v2/inventories/{{INVENTORY_ID}}/hosts/
     method: POST
     headers:
       Content-type: application/json
       Authorization: Basic {{AUTHENTICATION}}
     payload:
       name: {{HOST_IP}}
-      description: "EC2 instance"
+      description: 'EC2 instance'
     response_format: json
-    recoverable_codes: [400]
+    recoverable_codes: [200]
     response_translation: [host]
-    # response_expectation:
-    #     - ['id', '10']
