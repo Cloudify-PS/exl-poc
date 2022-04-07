@@ -14,4 +14,4 @@ This [blueprint](./ec2-instance.yaml) creates an EC2 instance in AWS. See the [R
 
 ### EKS
 
-TODO:
+This [blueprint](./eks.yaml) creates an EKS cluster with a single node group in AWS. See the [README](./eks/README.md) for more information.
