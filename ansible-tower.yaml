@@ -1,0 +1,92 @@
+tosca_definitions_version: cloudify_dsl_1_3
+
+description: >
+  This blueprint communicates with Ansible Tower via REST API.
+
+imports:
+  - http://cloudify.co/spec/cloudify/6.3.1/types.yaml
+  - plugin:cloudify-utilities-plugin
+
+inputs:
+
+  ansible_tower_endpoint:
+    type: string
+    description: |
+      An endpoint of a reachable Ansible Tower instance.
+      Should not contain http:// nor https:// prefix. Those are set up in use_ssl input.
+    default: '35.157.110.153'
+
+  ansible_tower_use_ssl:
+    type: boolean
+    default: true
+
+  ansible_tower_username:
+    type: string
+    default: { get_secret: ANSIBLE_TOWER_USERNAME }
+
+  ansible_tower_password:
+    type: string
+    default: { get_secret: ANSIBLE_TOWER_PASSWORD }
+
+  organization_id:
+    type: string
+    default: '1'
+
+  ec2_instance_deployment_name:
+    type: string
+    default: exl-poc-ec2
+
+node_templates:
+
+  ansible_tower_credentials:
+    type: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: ansible_tower/scripts/encode_credentials.sh
+          executor: central_deployment_agent
+          inputs:
+            ANSIBLE_TOWER_USERNAME: { get_input: ansible_tower_username }
+            ANSIBLE_TOWER_PASSWORD: { get_input: ansible_tower_password }
+
+  ansible_tower_inventory:
+    type: cloudify.rest.Requests
+    properties:
+      hosts: [{ get_input: ansible_tower_endpoint }]
+      ssl: true
+      verify: false
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            template_file: ansible_tower/rest_templates/create_inventory.yaml
+            prerender: true
+            save_to: inventory
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              ORGANIZATION_ID: { get_input: organization_id }
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_credentials
+
+  ansible_tower_host:
+    type: cloudify.rest.Requests
+    properties:
+      hosts: [{ get_input: ansible_tower_endpoint }]
+      ssl: true
+      verify: false
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        start:
+          inputs:
+            template_file: ansible_tower/rest_templates/create_host.yaml
+            prerender: true
+            save_to: host
+            params:
+              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              INVENTORY_ID: { get_attribute: [ansible_tower_inventory, result_properties, inventory, id] }
+              # HOST_IP: { get_capability: [{ get_input: ec2_instance_deployment_name }, instance_public_ip] }
+              HOST_IP: '35.183.128.104'
+    relationships:
+      - type: cloudify.relationships.depends_on
+        target: ansible_tower_inventory

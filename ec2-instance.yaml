@@ -82,3 +82,12 @@ node_templates:
 capabilities:
   instance_id:
     value: { get_attributes_list: [ instance, outputs, instance_id, value ] }
+
+  instance_name:
+    value: { get_attribute: [ instance, resource_config, variables, instance_name ] }
+
+  instance_private_ip:
+    value: { get_attribute: [ instance, resources, this, instances, 0, attributes, private_ip ] }
+
+  instance_public_ip:
+    value: { get_attribute: [ instance, resources, this, instances, 0, attributes, public_ip ] }
