@@ -14,7 +14,6 @@ inputs:
     description: |
       An endpoint of a reachable Ansible Tower instance.
       Should not contain http:// nor https:// prefix. Those are set up in use_ssl input.
-    default: '35.157.110.153'
 
   ansible_tower_use_ssl:
     type: boolean
@@ -44,9 +43,8 @@ inputs:
     description: |
       Name of the Ansible Playbook from SCM URL that should be executed.
 
-  ec2_instance_deployment_name:
+  ec2_instance_deployment_id:
     type: string
-    default: exl-poc-ec2
 
 
 node_templates:
@@ -105,8 +103,7 @@ node_templates:
             params:
               AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
               INVENTORY_ID: { get_attribute: [ansible_tower_inventory, result_properties, inventory, id] }
-              # HOST_IP: { get_capability: [{ get_input: ec2_instance_deployment_name }, instance_public_ip] }
-              HOST_IP: '35.183.128.104'
+              HOST_IP: { get_capability: [{ get_input: ec2_instance_deployment_id }, instance_public_ip] }
     relationships:
       - type: cloudify.relationships.depends_on
         target: ansible_tower_inventory
@@ -219,3 +216,22 @@ node_templates:
         target: ansible_tower_job_template
       - type: cloudify.relationships.depends_on
         target: ansible_tower_credential
+
+capabilities:
+  inventory_id:
+    value: { get_attribute: [ansible_tower_inventory, result_properties, inventory, id] }
+
+  host_id:
+    value: { get_attribute: [ansible_tower_host, result_properties, host, id] }
+
+  project_id:
+    value: { get_attribute: [ansible_tower_project, result_properties, project, id] }
+
+  job_template_id:
+    value: { get_attribute: [ansible_tower_job_template, result_properties, job_template, id] }
+
+  credential_id:
+    value: { get_attribute: [ansible_tower_credential, result_properties, credential, id] }
+
+  job_id:
+    value: { get_attribute: [ansible_tower_launch_job, result_properties, launch_job, id] }
