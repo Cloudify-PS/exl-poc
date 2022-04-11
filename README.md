@@ -21,4 +21,5 @@ See the [README](./ansible_tower/README.md) for more information.
 
 ### EKS
 
-This [blueprint](./eks.yaml) creates an EKS cluster with a single node group in AWS. See the [README](./eks/README.md) for more information.
+This [blueprint](./eks.yaml) creates an EKS cluster with a single node group in AWS.
+See the [README](./eks/README.md) for more information.
