@@ -5,8 +5,8 @@ rest_calls:
       Content-type: application/json
       Authorization: Basic {{AUTHENTICATION}}
     payload:
-      name: Cloudify_inventory
-      description: 'Resources created by Cloudify'
+      name: {{NAME}}
+      description: {{DESCRIPTION}}
       organization: {{ORGANIZATION_ID}}
     response_format: json
     recoverable_codes: [200]
