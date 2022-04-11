@@ -24,11 +24,13 @@ inputs:
   instance_name:
     type: string
     description: Name of the EC2 instance to deploy
+    display_label: Instance name
     default: example-instance
 
   instance_type:
     type: string
     description: The type/size of EC2 instance
+    display_label: Instance type
     default : t2.micro
     constraints:
       - valid_values:
@@ -44,14 +46,17 @@ inputs:
   key_name:
     type: string
     description: SSH key name for accessing EC2 instance
+    display_label: Key Name
 
   monitoring_enabled:
     type: boolean
     description: Whether or not to enable EC2 instance monitoring
+    display_label: Monitoring enabled
     default: false
 
   subnet_id:
     description: Subnet ID to place instance into
+    display_label: Subnet ID
 
 node_templates:
 
