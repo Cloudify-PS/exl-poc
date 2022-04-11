@@ -54,8 +54,8 @@ node_templates:
     type: cloudify.nodes.Root
     interfaces:
       cloudify.interfaces.lifecycle:
-        create:
-          implementation: ansible_tower/scripts/encode_credentials.sh
+        start:
+          implementation: ansible_tower/scripts/prepare_credentials.py
           executor: central_deployment_agent
           inputs:
             ANSIBLE_TOWER_USERNAME: { get_input: ansible_tower_username }
@@ -75,7 +75,7 @@ node_templates:
             prerender: true
             save_to: job_template
             params:
-              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
               JOB_TEMPLATE_NAME: delete_file
               DESCRIPTION: 'Deletes a file on EC2 instance'
               INVENTORY_ID: { get_capability: [{ get_input: ansible_tower_deployment_id }, inventory_id] }
@@ -86,7 +86,7 @@ node_templates:
             template_file: ansible_tower/rest_templates/delete_job_template.yaml
             prerender: true
             params:
-              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
               JOB_TEMPLATE_ID: { get_attribute: [SELF, result_properties, job_template, id] }
     relationships:
       - type: cloudify.relationships.depends_on
@@ -106,7 +106,7 @@ node_templates:
             prerender: true
             save_to: credential
             params:
-              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
               JOB_TEMPLATE_ID: { get_attribute: [ansible_tower_job_template, result_properties, job_template, id] }
               NAME: VM_credentials
               DESCRIPTION: 'Credentials to access the EC2 created by Cloudify'
@@ -118,7 +118,7 @@ node_templates:
             template_file: ansible_tower/rest_templates/delete_credential.yaml
             prerender: true
             params:
-              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
               CREDENTIAL_ID: { get_attribute: [SELF, result_properties, credential, id] }
     relationships:
       - type: cloudify.relationships.depends_on
@@ -138,7 +138,7 @@ node_templates:
             prerender: true
             save_to: launch_job
             params:
-              AUTHENTICATION: { get_attribute: [ansible_tower_credentials, credentials] }
+              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
               JOB_TEMPLATE_ID: { get_attribute: [ansible_tower_job_template, result_properties, job_template, id] }
     relationships:
       - type: cloudify.relationships.depends_on
