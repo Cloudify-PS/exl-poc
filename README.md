@@ -23,7 +23,7 @@ See the [README](./ansible_tower/README.md) for more information.
 
 This [blueprint](./ansible_tower_revert_playbook.yaml) runs a job deploying a playbook from Ansible Tower.  
 It creates a job_template with credentials and then runs the job.  
-An Ansible Playbook used for this jos is by default a playbook that reverts changes introduced by [Ansible Tower blueprint](./ansible_tower.yaml).  
+An Ansible Playbook used for this job is by default a playbook that reverts changes introduced by [Ansible Tower blueprint](./ansible_tower.yaml).  
 It deletes a file created by [Ansible Tower blueprint](./ansible_tower.yaml) on the EC2 instance.  
 
 ### EKS
