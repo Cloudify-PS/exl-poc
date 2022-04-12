@@ -1,7 +1,7 @@
 tosca_definitions_version: cloudify_dsl_1_3
 
 description: >
-  This blueprint creates an EC2 instance in AWS using Terraform
+  This blueprint creates an EKS cluster in AWS using Terraform
 
 imports:
   - http://cloudify.co/spec/cloudify/6.3.1/types.yaml
@@ -32,7 +32,6 @@ inputs:
     default: example-cluster
     display_label: Cluster Name
 
-
   kubernetes_version:
     type: string
     description: Version of Kubernetes to deploy
@@ -42,7 +41,7 @@ inputs:
   instance_type:
     type: string
     description: Managed node group instance size to use
-    display_label: Kubernetes Version
+    display_label: Instance Type
     default: t3.medium
 
   node_group_name:
@@ -104,5 +103,6 @@ node_templates:
         type: cloudify.terraform.relationships.run_on_host
 
 capabilities:
+
   cluster_endpoint:
     value: { get_attributes_list: [ eks-cluster, outputs, cluster_endpoint, value ] }
