@@ -28,4 +28,5 @@ It deletes a file created by [Ansible Tower blueprint](./ansible_tower.yaml) on 
 
 ### EKS
 
-TODO:
+This [blueprint](./eks.yaml) creates an EKS cluster with a single node group in AWS.
+See the [README](./eks/README.md) for more information.

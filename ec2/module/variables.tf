@@ -1,6 +1,6 @@
 variable "region" {
   type        = string
-  description = "Name of the AWS region to deploy VPC into"
+  description = "Name of the AWS region to deploy EC2 instance into"
   default     = "us-east-1"
 }
 

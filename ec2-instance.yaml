@@ -47,7 +47,7 @@ inputs:
   key_name:
     type: string
     description: SSH key name for accessing EC2 instance
-    display_label: Keypair Name
+    display_label: Key Name
 
   monitoring_enabled:
     type: boolean
