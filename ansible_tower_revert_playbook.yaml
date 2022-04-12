@@ -31,28 +31,16 @@ inputs:
     default: { get_secret: ANSIBLE_TOWER_PASSWORD }
     display_label: Ansible Tower User Password
 
-  ansible_tower_organization_id:
-    type: string
-    default: '1'
-    display_label: Ansible Tower Organization ID
-
-  ansible_tower_scm_url:
-    type: string
-    default: 'https://github.com/jakubcierlik/exl-example-playbook.git'
-    description: |
-      Github repository containing Ansible Playbooks.
-    display_label: Ansible Tower SCM URL Containing Ansible Playbook
-
   ansible_tower_playbook_name:
     type: string
-    default: 'playbook.yaml'
+    default: 'playbook_revert.yaml'
     description: |
       Name of the Ansible Playbook from SCM URL that should be executed.
     display_label: Ansible Playbook Name
 
-  ec2_instance_deployment_id:
+  ansible_tower_deployment_id:
     type: string
-    display_label: EC2 Instance Deployment ID
+    display_label: Ansible Tower Install Deployment ID
 
   ec2_username:
     type: string
@@ -72,91 +60,6 @@ node_templates:
           inputs:
             ANSIBLE_TOWER_USERNAME: { get_input: ansible_tower_username }
             ANSIBLE_TOWER_PASSWORD: { get_input: ansible_tower_password }
-        stop:
-          implementation: ansible_tower/scripts/remove_credentials.py
-          executor: central_deployment_agent
-
-  ansible_tower_inventory:
-    type: cloudify.rest.Requests
-    properties:
-      hosts: [{ get_input: ansible_tower_endpoint }]
-      ssl: { get_input: ansible_tower_use_ssl }
-      verify: false
-    interfaces:
-      cloudify.interfaces.lifecycle:
-        start:
-          inputs:
-            template_file: ansible_tower/rest_templates/create_inventory.yaml
-            prerender: true
-            save_to: inventory
-            params:
-              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
-              NAME: Cloudify_inventory
-              DESCRIPTION: 'Inventory created by Cloudify'
-              ORGANIZATION_ID: { get_input: ansible_tower_organization_id }
-        stop:
-          inputs:
-            template_file: ansible_tower/rest_templates/delete_inventory.yaml
-            prerender: true
-            params:
-              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
-              INVENTORY_ID: { get_attribute: [SELF, result_properties, inventory, id] }
-    relationships:
-      - type: cloudify.relationships.depends_on
-        target: ansible_tower_credentials
-
-  ansible_tower_host:
-    type: cloudify.rest.Requests
-    properties:
-      hosts: [{ get_input: ansible_tower_endpoint }]
-      ssl: { get_input: ansible_tower_use_ssl }
-      verify: false
-    interfaces:
-      cloudify.interfaces.lifecycle:
-        start:
-          inputs:
-            template_file: ansible_tower/rest_templates/create_host.yaml
-            prerender: true
-            save_to: host
-            params:
-              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
-              INVENTORY_ID: { get_attribute: [ansible_tower_inventory, result_properties, inventory, id] }
-              HOST_IP: { get_capability: [{ get_input: ec2_instance_deployment_id }, instance_public_ip] }
-              DESCRIPTION: 'EC2 instance'
-    relationships:
-      - type: cloudify.relationships.depends_on
-        target: ansible_tower_inventory
-
-  ansible_tower_project:
-    type: cloudify.rest.Requests
-    properties:
-      hosts: [{ get_input: ansible_tower_endpoint }]
-      ssl: { get_input: ansible_tower_use_ssl }
-      verify: false
-    interfaces:
-      cloudify.interfaces.lifecycle:
-        start:
-          inputs:
-            template_file: ansible_tower/rest_templates/create_project.yaml
-            prerender: true
-            save_to: project
-            params:
-              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
-              NAME: Cloudify_project
-              DESCRIPTION: 'Project for Cloudify POC'
-              ORGANIZATION_ID: { get_input: ansible_tower_organization_id }
-              SCM_TYPE: git
-              SCM_URL: { get_input: ansible_tower_scm_url }
-        stop:
-          inputs:
-            template_file: ansible_tower/rest_templates/delete_project.yaml
-            prerender: true
-            params:
-              AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
-              PROJECT_ID: { get_attribute: [SELF, result_properties, project, id] }
-    relationships:
-      - type: cloudify.relationships.depends_on
-        target: ansible_tower_host
 
   ansible_tower_job_template:
     type: cloudify.rest.Requests
@@ -173,10 +76,10 @@ node_templates:
             save_to: job_template
             params:
               AUTHENTICATION: { get_secret: ANSIBLE_TOWER_AUTHENTICATION }
-              JOB_TEMPLATE_NAME: create_file
-              DESCRIPTION: 'Creates an empty file on EC2 instance'
-              INVENTORY_ID: { get_attribute: [ansible_tower_inventory, result_properties, inventory, id] }
-              PROJECT_ID: { get_attribute: [ansible_tower_project, result_properties, project, id] }
+              JOB_TEMPLATE_NAME: delete_file
+              DESCRIPTION: 'Deletes a file on EC2 instance'
+              INVENTORY_ID: { get_capability: [{ get_input: ansible_tower_deployment_id }, inventory_id] }
+              PROJECT_ID: { get_capability: [{ get_input: ansible_tower_deployment_id }, project_id] }
               PLAYBOOK_NAME: { get_input: ansible_tower_playbook_name }
         stop:
           inputs:
@@ -187,9 +90,7 @@ node_templates:
               JOB_TEMPLATE_ID: { get_attribute: [SELF, result_properties, job_template, id] }
     relationships:
       - type: cloudify.relationships.depends_on
-        target: ansible_tower_project
-      - type: cloudify.relationships.depends_on
-        target: ansible_tower_inventory
+        target: ansible_tower_credentials
 
   ansible_tower_credential:
     type: cloudify.rest.Requests
@@ -245,15 +146,8 @@ node_templates:
       - type: cloudify.relationships.depends_on
         target: ansible_tower_credential
 
+
 capabilities:
-  inventory_id:
-    value: { get_attribute: [ansible_tower_inventory, result_properties, inventory, id] }
-
-  host_id:
-    value: { get_attribute: [ansible_tower_host, result_properties, host, id] }
-
-  project_id:
-    value: { get_attribute: [ansible_tower_project, result_properties, project, id] }
 
   job_template_id:
     value: { get_attribute: [ansible_tower_job_template, result_properties, job_template, id] }

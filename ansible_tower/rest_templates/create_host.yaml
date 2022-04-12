@@ -6,7 +6,7 @@ rest_calls:
       Authorization: Basic {{AUTHENTICATION}}
     payload:
       name: {{HOST_IP}}
-      description: 'EC2 instance'
+      description: {{DESCRIPTION}}
     response_format: json
     recoverable_codes: [200]
     response_translation: [host]
