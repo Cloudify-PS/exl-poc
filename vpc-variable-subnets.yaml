@@ -78,7 +78,8 @@ node_templates:
     properties:
       resource_config:
         source:
-          location: vpc-variable-subnets/module.zip
+          location: https://github.com/Cloudify-PS/exl-poc/archive/refs/heads/main.zip
+        source_path: vpc-variable-subnets/module
         variables:
           region: { get_input: region }
           vpc_name: { get_input: vpc_name }
@@ -94,7 +95,8 @@ node_templates:
     properties:
       resource_config:
         source:
-          location: tgw-attachment/module.zip
+          location: https://github.com/Cloudify-PS/exl-poc/archive/refs/heads/main.zip
+        source_path: tgw-attachment/module
         variables:
           region: { get_input: region }
           transit_gateway_id: { get_input: transit_gateway_id }
@@ -113,7 +115,8 @@ node_templates:
     properties:
       resource_config:
         source:
-          location: rt-association/module.zip
+          location: https://github.com/Cloudify-PS/exl-poc/archive/refs/heads/main.zip
+        source_path: rt-association/module
         variables:
           region: { get_input: region }
           transit_gateway_id: { get_input: transit_gateway_id }
